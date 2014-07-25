@@ -1,3 +1,6 @@
 [submodule "text_reading"]
 	path = text_reading
 	url = git@github.com:ishalyminov/text_reading.git
+[submodule "ruscorpora_syntax"]
+	path = ruscorpora_syntax
+	url = git@github.com:ishalyminov/ruscorpora_syntax.git

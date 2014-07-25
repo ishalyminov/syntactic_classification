@@ -7,5 +7,12 @@ def cosine(in_lhs, in_rhs):
     result = numpy.dot(in_lhs, in_rhs.T)
     return result
 
-def graph_kernel(in_lhs, in_rhs):
-    return 1.0
+
+def jaccard_distance(in_lhs, in_rhs):
+    (set_lhs, set_rhs) = (set(in_lhs), set(in_rhs))
+    jaccard_index = len(set_lhs.intersection(set_rhs)) / float(len(set_lhs.union(set_rhs)))
+    return 1.0 - jaccard_index
+
+
+def tree_edit_distance(in_lhs, in_rhs):
+    pass
