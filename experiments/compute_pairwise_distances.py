@@ -4,23 +4,12 @@ import multiprocessing
 import os
 import random
 import sys
+from experiments import distance_util
 
 sys.path.append('..')
 
 import distance
 import zss_tree
-
-SENTENCES = []
-SENTENCES_SAMPLE = []
-
-# means that 100 x 100 distances will be calculated inside a single job
-JOB_SIZE_PER_DIMENSION = 100
-JOBS_NUMBER = 16
-JOBS_CHUNK_SIZE = 50
-
-# sentence contents constants
-SENTENCE_LEN_MIN = 4
-SENTENCE_LEN_MAX = 15
 
 DISTANCES_MIN = []
 MAX_RESULT_SIZE = 100
@@ -33,7 +22,7 @@ def load_all_sentences(in_texts_root):
             full_filename = os.path.join(root, filename)
             print 'processing file: ', full_filename
             for sentence in zss_tree.load_file(full_filename):
-                if len(sentence) < SENTENCE_LEN_MIN or SENTENCE_LEN_MAX < len(sentence):
+                if len(sentence) < distance_util.SENTENCE_LEN_MIN or distance_util.SENTENCE_LEN_MAX < len(sentence):
                     continue
                 SENTENCES.append(sentence)
 
@@ -105,6 +94,7 @@ def output_result(in_distances_top, in_result_stream):
         print >>in_result_stream, '%d to %d: %f' % (dist[1], dist[2], -dist[0])
         zss_tree.print_sentence(SENTENCES[SENTENCES_SAMPLE[dist[1]]], in_result_stream)
         zss_tree.print_sentence(SENTENCES[SENTENCES_SAMPLE[dist[2]]], in_result_stream)
+        print >>in_result_stream, '\n\n\n'
 
 
 if __name__ == '__main__':
@@ -113,6 +103,6 @@ if __name__ == '__main__':
         exit()
     load_all_sentences(sys.argv[1])
     print 'Loaded', len(SENTENCES), 'sentences'
-    distances_top = compute_distances(sample_size=1000)
+    distances_top = compute_distances(sample_size=200)
     output_stream = codecs.getwriter('utf-8')(open(sys.argv[2], 'w'))
     output_result(distances_top, output_stream)
