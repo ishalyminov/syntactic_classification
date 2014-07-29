@@ -1,3 +1,4 @@
+import nltk
 import zss
 
 
@@ -18,3 +19,9 @@ def distance_syntactic_advanced(in_sentence_a, in_sentence_b):
                                         in_sentence_b.get_root(),
                                         label_dist=lambda x, y: x != y)
     return edit_distance / float(len(in_sentence_a) + len(in_sentence_b))
+
+
+def edit_distance_listwise(in_sentence_a, in_sentence_b):
+    dist = nltk.metrics.distance.edit_distance(in_sentence_a, in_sentence_b)
+    # returning similarity - 1.0 is the best, 0.0 is the worst
+    return 1.0 - dist / float(max(len(in_sentence_a), len(in_sentence_b)))
