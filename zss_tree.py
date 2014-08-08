@@ -1,13 +1,15 @@
-"""
-    Tree operations and structures for integration with Zhang-Shasha distance
-"""
+'''
+    Tree operations and structures for integration with Zhang-Shasha distance.
+    Alternative to syntax_tree.py for edit-distance kind of things
+'''
+
 import codecs
 
 import itertools
 import zss
 
 
-class DependencyTree(object):
+class ZssDependencyTree(object):
     def __init__(self, in_lines):
         self.nodes = []
         self.parents = []
@@ -52,7 +54,7 @@ def load_file(in_file):
     lines = codecs.getreader('utf-8')(open(in_file)).readlines()
     sentences = ''.join(lines).strip().split('\n\n')
     for sentence in sentences:
-        result.append(DependencyTree(sentence.split('\n')))
+        result.append(ZssDependencyTree(sentence.split('\n')))
     return result
 
 

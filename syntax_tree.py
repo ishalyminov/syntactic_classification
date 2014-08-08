@@ -1,6 +1,3 @@
-import itertools
-import sys
-
 '''
     Sentence as a syntactic tree.
     Contains nodes - tuples ('word form', 'grammar tags'),
@@ -8,67 +5,91 @@ import sys
     Tree's 0th node is always the ROOT, all the 'word' nodes start from 1.
 '''
 
+import itertools
+import sys
+import operator
 
-class Sentence(object):
+
+class DependencyTreeNode(object):
+    def __init__(self, in_word_index, in_form, in_grammar):
+        self.word_index = in_word_index
+        self.form = in_form
+        self.grammar = in_grammar
+        self.parent = None
+        self.children = []
+        self.children_types = []
+
+
+class DependencyTree(object):
     def __init__(self):
-        self.nodes = [('ROOT', '')]
-        self.parents = [None]
-        self.links = [[]]
+        self.nodes = [DependencyTreeNode(0, 'ROOT', '')]
 
-    def add_link(self, in_word_tuple, in_parent_index, in_link_type):
-        word_index = len(self.nodes)
-        self.nodes.append(in_word_tuple)
-        self.parents.append(in_parent_index)
-        self.__create_link_lists(in_parent_index)
-        if word_index not in self.links[in_parent_index]:
-            self.links[in_parent_index].append((word_index, in_link_type))
+    def add_node(self, in_node):
+        self.nodes.append(in_node)
 
-    def get_link(self, in_src_index, in_dst_index):
-        for link in self.links[in_src_index]:
-            if link[0] == in_dst_index:
-                return link
+    def add_link(self, in_from_index, in_to_index, in_link_type):
+        assert in_from_index < len(self.nodes) + 1 and in_to_index < len(self.nodes) + 1
+        child_node = self.find_node_by_index(in_to_index)
+        parent_node = self.find_node_by_index(in_from_index)
+        assert child_node is not None and parent_node is not None
+        child_node.parent = parent_node
+        parent_node.children.append(child_node)
+        parent_node.children_types.append(in_link_type)
+
+    def find_node_by_index(self, in_index):
+        for node in self.nodes:
+            if node.word_index == in_index:
+                return node
         return None
 
-    def __create_link_lists(self, in_index):
-        while len(self.links) < in_index + 1:
-            self.links.append([])
+    def get_root(self):
+        return self.nodes[0]
 
-    def __iter__(self):
-        for word in self.nodes[1:]:
-            yield word
+    def get_words_number(self):
+        return len(self.nodes) - 1
 
 
-def deserialize_sentence(in_lines):
-    result_sentence = Sentence()
-    for line in in_lines:
+def build_tree(in_lines):
+    result_tree = DependencyTree()
+    links = []
+    for word_index, line in zip(itertools.count(1), in_lines):
         tokens = line.strip().split('\t')
         assert len(tokens) > 2
-        # form, grammar
-        node = (tokens[0], tokens[1])
+        form, grammar = tokens[0], tokens[1]
         root = int(tokens[2])
         link_type = tokens[3] if len(tokens) > 3 else 'UNDEF'
-        result_sentence.add_link(node, root, link_type)
-    return result_sentence
+        node = DependencyTreeNode(word_index, form, grammar)
+        result_tree.add_node(node)
+        links.append((root, word_index, link_type))
+
+    for from_index, to_index, link_type in links:
+        result_tree.add_link(from_index, to_index, link_type)
+    return result_tree
 
 
-def serialize_sentence(in_sentence, out_stream):
-    for (word, word_index, parent_index) in zip(in_sentence.nodes[1:],
-                                                itertools.count(1),
-                                                in_sentence.parents[1:]):
-        link_from_parent = in_sentence.get_link(parent_index, word_index)
-        print >>out_stream, '\t'.join(word + (str(parent_index), link_from_parent[1]))
+def serialize_tree(in_tree, out_stream):
+    for word_index in xrange(1, in_tree.get_words_number() + 1):
+        node = in_tree.find_node_by_index(word_index)
+        node_parent = node.parent
+        link_type = None
+        for child_index in xrange(len(node_parent.children)):
+            if node_parent.children[child_index] == node:
+                link_type = node_parent.children_types[child_index]
+                break
+        node_serialized = [node.form, node.grammar, str(node.parent.word_index), link_type]
+        print >>out_stream, '\t'.join(node_serialized)
 
 
 def load_file(in_stream):
     result = []
-    lines = open(in_stream).readlines()
+    lines = in_stream.readlines()
     sentences = ''.join(lines).strip().split('\n\n')
     for sentence_lines in sentences:
-        result.append(deserialize_sentence(sentence_lines.split('\n')))
+        result.append(build_tree(sentence_lines.split('\n')))
     return result
 
 
 if __name__ == '__main__':
-    sentence = deserialize_sentence(open('example.txt').readlines())
-    serialize_sentence(sentence, sys.stdout)
+    sentence = build_tree(open('example.txt').readlines())
+    serialize_tree(sentence, sys.stdout)
 
