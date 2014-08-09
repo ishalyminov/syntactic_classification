@@ -1,19 +1,12 @@
-'''
-    Sentence as a syntactic tree.
-    Contains nodes - tuples ('word form', 'grammar tags'),
-    dependency link lists - links[src_node_index] = [(dst_node_index, 'dependency type')].
-    Tree's 0th node is always the ROOT, all the 'word' nodes start from 1.
-'''
-
 import itertools
 import sys
-import operator
 
 
 class DependencyTreeNode(object):
-    def __init__(self, in_word_index, in_form, in_grammar):
+    def __init__(self, in_word_index, in_form, in_lemma, in_grammar):
         self.word_index = in_word_index
         self.form = in_form
+        self.lemma = in_lemma
         self.grammar = in_grammar
         self.parent = None
         self.children = []
@@ -22,7 +15,7 @@ class DependencyTreeNode(object):
 
 class DependencyTree(object):
     def __init__(self):
-        self.nodes = [DependencyTreeNode(0, 'ROOT', '')]
+        self.nodes = [DependencyTreeNode(0, 'ROOT', '', '')]
 
     def add_node(self, in_node):
         self.nodes.append(in_node)
@@ -54,11 +47,12 @@ def build_tree(in_lines):
     links = []
     for word_index, line in zip(itertools.count(1), in_lines):
         tokens = line.strip().split('\t')
-        assert len(tokens) > 2
+        assert len(tokens) > 3
         form, grammar = tokens[0], tokens[1]
         root = int(tokens[2])
         link_type = tokens[3] if len(tokens) > 3 else 'UNDEF'
-        node = DependencyTreeNode(word_index, form, grammar)
+        lemma = tokens[4] if len(tokens) > 4 else 'UNDEF'
+        node = DependencyTreeNode(word_index, form, lemma, grammar)
         result_tree.add_node(node)
         links.append((root, word_index, link_type))
 
