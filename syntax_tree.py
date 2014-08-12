@@ -21,7 +21,6 @@ class DependencyTree(object):
         self.nodes.append(in_node)
 
     def add_link(self, in_from_index, in_to_index, in_link_type):
-        assert in_from_index < len(self.nodes) + 1 and in_to_index < len(self.nodes) + 1
         child_node = self.find_node_by_index(in_to_index)
         parent_node = self.find_node_by_index(in_from_index)
         assert child_node is not None and parent_node is not None
@@ -62,8 +61,7 @@ def build_tree(in_lines):
 
 
 def serialize_tree(in_tree, out_stream):
-    for word_index in xrange(1, in_tree.get_words_number() + 1):
-        node = in_tree.find_node_by_index(word_index)
+    for node in sorted(in_tree.nodes, key=lambda cmp_node: cmp_node.word_index)[1:]:
         node_parent = node.parent
         link_type = None
         for child_index in xrange(len(node_parent.children)):
